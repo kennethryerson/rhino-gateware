@@ -95,9 +95,10 @@ TIMESPEC "TSclk_adc" = PERIOD "GRPclk_adc" """+str(float(adc_period))+""" ns HIG
 		pll_out0 = Signal()
 		pll_out1 = Signal()
 		pll_out2 = Signal()
+		pll_factor = 8 if double_dac else 4
 		self.specials += Instance("PLL_BASE",
 			Instance.Parameter("BANDWIDTH", "OPTIMIZED"),
-			Instance.Parameter("CLKFBOUT_MULT", 8),
+			Instance.Parameter("CLKFBOUT_MULT", pll_factor),
 			Instance.Parameter("CLKFBOUT_PHASE", 180.0),
 			
 			Instance.Parameter("COMPENSATION", "SOURCE_SYNCHRONOUS"),
@@ -109,34 +110,34 @@ TIMESPEC "TSclk_adc" = PERIOD "GRPclk_adc" """+str(float(adc_period))+""" ns HIG
 			Instance.Input("CLKIN", adc_buffered),
 
 			# 1x signal clock
-			Instance.Parameter("CLKOUT0_DIVIDE", 8),
+			Instance.Parameter("CLKOUT0_DIVIDE", pll_factor),
 			Instance.Parameter("CLKOUT0_DUTY_CYCLE", 0.5),
 			Instance.Parameter("CLKOUT0_PHASE", 0.0),
 			Instance.Output("CLKOUT0", pll_out0),
 			
 			# 4x (8x) DAC SERDES clock
-			Instance.Parameter("CLKOUT1_DIVIDE", 1 if double_dac else 2),
+			Instance.Parameter("CLKOUT1_DIVIDE", 1),
 			Instance.Parameter("CLKOUT1_DUTY_CYCLE", 0.5),
 			Instance.Parameter("CLKOUT1_PHASE", 0.0),
 			Instance.Output("CLKOUT1", pll_out1),
 			
 			# 2x (4x) DAC clock
-			Instance.Parameter("CLKOUT2_DIVIDE", 2 if double_dac else 4),
+			Instance.Parameter("CLKOUT2_DIVIDE", 2),
 			Instance.Parameter("CLKOUT2_DUTY_CYCLE", 0.5),
 			Instance.Parameter("CLKOUT2_PHASE", -45.0),
 			Instance.Output("CLKOUT2", pll_out2),
 			
-			Instance.Parameter("CLKOUT3_DIVIDE", 8),
+			Instance.Parameter("CLKOUT3_DIVIDE", pll_factor),
 			Instance.Parameter("CLKOUT3_DUTY_CYCLE", 0.5),
 			Instance.Parameter("CLKOUT3_PHASE", 0.0),
 			Instance.Output("CLKOUT3"),
 			
-			Instance.Parameter("CLKOUT4_DIVIDE", 8),
+			Instance.Parameter("CLKOUT4_DIVIDE", pll_factor),
 			Instance.Parameter("CLKOUT4_DUTY_CYCLE", 0.5),
 			Instance.Parameter("CLKOUT4_PHASE", 0.0),
 			Instance.Output("CLKOUT4"),
 			
-			Instance.Parameter("CLKOUT5_DIVIDE", 8),
+			Instance.Parameter("CLKOUT5_DIVIDE", pll_factor),
 			Instance.Parameter("CLKOUT5_DUTY_CYCLE", 0.5),
 			Instance.Parameter("CLKOUT5_PHASE", 0.0),
 			Instance.Output("CLKOUT5"),
@@ -163,7 +164,7 @@ TIMESPEC "TSclk_adc" = PERIOD "GRPclk_adc" """+str(float(adc_period))+""" ns HIG
 		
 		# generate strobe and DAC I/O clock
 		self.specials += Instance("BUFPLL",
-			Instance.Parameter("DIVIDE", 8 if double_dac else 4),
+			Instance.Parameter("DIVIDE", pll_factor),
 			Instance.Input("PLLIN", pll_out1),
 			Instance.Input("GCLK", ClockSignal("signal")),
 			Instance.Input("LOCKED", pll_locked),
