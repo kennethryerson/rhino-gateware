@@ -33,6 +33,10 @@ class GPMC(Module):
 		self.specials += MultiReg(gpmc_dr_sys, gpmc_d.o, "gpmc")
 		self.comb += gpmc_d.oe.eq(~csr_cs_n_pad & ~gpmc_pads.oe_n & gpmc_pads.ale_n)
 
+		# Synchronize WAIT to GPMC domain
+		wait_s = Signal()
+		self.specials += MultiReg(wait_s, gpmc_pads.wait, "gpmc")
+
 		# Generate read/write pulses in sys domain
 		pulse_read = PulseSynchronizer("gpmc", "sys")
 		pulse_write = PulseSynchronizer("gpmc", "sys")
@@ -47,6 +51,11 @@ class GPMC(Module):
 			pulse_write.i.eq(gpmc_start & ~gpmc_pads.we_n)
 		]
 
+		# Wait enable on CS active
+		cs_n_r = Signal()
+		self.sync += cs_n_r.eq(csr_cs_n_pad)
+		self.sync += If(~csr_cs_n_pad & cs_n_r,wait_s.eq(1))
+
 		# Access Wishbone
 		self.sync += [
 			If(~self.wishbone.cyc & (pulse_read.o | pulse_write.o),
@@ -59,7 +68,8 @@ class GPMC(Module):
 			If(self.wishbone.ack,
 				self.wishbone.cyc.eq(0),
 				self.wishbone.stb.eq(0),
-				gpmc_dr_sys.eq(self.wishbone.dat_r)
+				gpmc_dr_sys.eq(self.wishbone.dat_r),
+				wait_s.eq(0)
 			)
 		]
 		self.comb += self.wishbone.sel.eq(0b11),
