@@ -25,6 +25,28 @@ TIMESPEC "TSclk" = PERIOD "GRPclk" """+str(float(period))+""" ns HIGH 50%;
 			Instance.Input("A3", 1),
 			Instance.Output("Q", self.cd_sys.rst))
 
+class CRGBasic(Module):
+	def __init__(self, platform, pads, period=10.0):
+		self.clock_domains.cd_sys = ClockDomain()
+		platform.add_platform_command("""
+NET "{clk}" TNM_NET = "GRPclk";
+TIMESPEC "TSclk" = PERIOD "GRPclk" """+str(float(period))+""" ns HIGH 50%;
+""", clk=pads)
+		self.specials += Instance("IBUFG",
+			Instance.Input("I", pads),
+			Instance.Output("O", self.cd_sys.clk)
+		)
+		self.specials += Instance("SRL16E",
+			Instance.Parameter("INIT", 0xffff),
+			Instance.Input("CLK", ClockSignal()),
+			Instance.Input("CE", 1),
+			Instance.Input("D", 0),
+			Instance.Input("A0", 1),
+			Instance.Input("A1", 1),
+			Instance.Input("A2", 1),
+			Instance.Input("A3", 1),
+			Instance.Output("Q", self.cd_sys.rst))
+
 # Clock generation for the FMC150
 #
 # Free running clock from RHINO is 100MHz.
