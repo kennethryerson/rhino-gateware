@@ -107,6 +107,6 @@ class GPMCToplevel(GenericToplevel):
 			else:
 				permission = BOF_PERM_READ
 			bytes_per_word = 2*int((memory.width+15)/16)
-			length = min(memory.depth*bytes_per_word, 0x400)
+			length = min(memory.depth*bytes_per_word, csr_bank_size)
 			symtab.append((name + "_" + memory.name_override, permission, mem_base, length))
 		return symtab
